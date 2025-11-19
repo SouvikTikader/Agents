@@ -205,7 +205,7 @@ class BaseAgent(ABC):
             metadata=metadata
         )
         
-        # ... rest of the BaseAgent methods remain the same ...
+        
 
     async def send_notification_tool(self, action: str, context: Dict) -> Dict:
         """Enhanced notification tool with targeting"""
@@ -220,7 +220,7 @@ class BaseAgent(ABC):
         
         message = f"{self.name}: {action}"
         
-        # FIXED: Use the agent's notification method
+        
         await self.send_agent_notification(
             message=message,
             user_id=target_user,
@@ -235,7 +235,7 @@ class BaseAgent(ABC):
             "target": target_user or "all"
         }
     
-    # Existing methods remain the same...
+
     async def analyze_success(self, plan: Dict, outcome: Dict) -> List[str]:
         """Analyze what worked and what didn't"""
         lessons = []
@@ -259,7 +259,7 @@ class BaseAgent(ABC):
             
         return adjustments
     
-    # Tool methods that will be implemented by specific agents
+    # Tool methods
     async def use_database_tool(self, action: str, context: Dict) -> Dict:
         return {"action": action, "status": "tool_not_implemented"}
     
@@ -306,4 +306,5 @@ class AgentMemory:
         for reflection in recent:
             lessons.extend(reflection.get("lessons_learned", []))
         return lessons
+
 # [file content end]
