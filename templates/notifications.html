@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Notifications</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body { background-color: #f9fafc; font-family: 'Segoe UI', sans-serif; }
+    .nav-tabs .nav-link.active { background-color: #0d6efd; color: #fff; }
+    .card { border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
+    .card-header { font-weight: 600; background: #f1f3f5; }
+    .notif-badge { font-size: 0.8rem; }
+    .notif-type-agent { border-left: 5px solid #6f42c1; }
+    .notif-type-system { border-left: 5px solid #0d6efd; }
+    .notif-type-risk_alert { border-left: 5px solid #dc3545; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-primary shadow-sm">
+  <div class="container-fluid">
+    <span class="navbar-brand">🔔 Notifications</span>
+    <a href="{% if user_role == 'admin' %}/admin{% else %}/dashboard{% endif %}" class="btn btn-light btn-sm">Back</a>
+  </div>
+</nav>
+
+<div class="container py-4">
+  <h5 class="mb-3">Welcome, {{ username }} ({{ user_role|capitalize }})</h5>
+
+  {% if user_role == 'admin' %}
+  <!-- Admin Tab Navigation -->
+  <ul class="nav nav-tabs" id="notifTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">All Notifications</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">System Alerts</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="agent-tab" data-bs-toggle="tab" data-bs-target="#agent" type="button" role="tab">Agent Messages</button>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3" id="notifTabsContent">
+    <!-- All Notifications -->
+    <div class="tab-pane fade show active" id="all" role="tabpanel">
+      {% for n in notes %}
+        <div class="card {% if n['notification_type']=='agent' %}notif-type-agent{% elif n['notification_type']=='risk_alert' %}notif-type-risk_alert{% else %}notif-type-system{% endif %}">
+          <div class="card-header d-flex justify-content-between">
+            <span>{{ n['notification_type']|capitalize }}</span>
+            <span class="badge bg-secondary notif-badge">{{ n['priority']|capitalize }}</span>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ n['message'] }}</p>
+            {% if n['agent_source'] %}
+              <span class="badge bg-info text-dark">Agent: {{ n['agent_source'] }}</span>
+            {% endif %}
+            <p class="text-muted small mt-2 mb-0">{{ n['timestamp'] }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- System Notifications -->
+    <div class="tab-pane fade" id="system" role="tabpanel">
+      {% for n in notes if n['notification_type'] not in ['agent','grievance_urgent'] %}
+        <div class="card notif-type-system">
+          <div class="card-header d-flex justify-content-between">
+            <span>System Notification</span>
+            <span class="badge bg-secondary notif-badge">{{ n['priority']|capitalize }}</span>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ n['message'] }}</p>
+            <p class="text-muted small mb-0">{{ n['timestamp'] }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Agent Notifications -->
+    <div class="tab-pane fade" id="agent" role="tabpanel">
+      {% for n in notes if n['notification_type'] in ['agent','risk_alert','grievance_urgent','grievance_escalation'] %}
+        <div class="card notif-type-agent">
+          <div class="card-header d-flex justify-content-between">
+            <span>Agent Message ({{ n['agent_source'] or 'Unknown' }})</span>
+            <span class="badge bg-warning text-dark notif-badge">{{ n['priority']|capitalize }}</span>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ n['message'] }}</p>
+            <p class="text-muted small mb-0">{{ n['timestamp'] }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Student View -->
+  {% for n in notes %}
+    <div class="card {% if n['notification_type']=='risk_alert' %}notif-type-risk_alert{% else %}notif-type-system{% endif %}">
+      <div class="card-header d-flex justify-content-between">
+        <span>{{ n['notification_type']|capitalize }}</span>
+        <span class="badge bg-secondary notif-badge">{{ n['priority']|capitalize }}</span>
+      </div>
+      <div class="card-body">
+        <p class="card-text">{{ n['message'] }}</p>
+        <p class="text-muted small mb-0">{{ n['timestamp'] }}</p>
+      </div>
+    </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🤖 Agent System Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .risk-critical { background: linear-gradient(45deg, #dc3545, #c82333); color: white; }
+        .risk-high { background: linear-gradient(45deg, #fd7e14, #e55a00); color: white; }
+        .risk-medium { background: linear-gradient(45deg, #ffc107, #e0a800); color: black; }
+        .risk-low { background: linear-gradient(45deg, #28a745, #1e7e34); color: white; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-robot"></i> Autonomous Agent System Monitor
+            </a>
+            <div class="d-flex gap-2">
+                <a href="/admin" class="btn btn-light btn-sm">Admin Dashboard</a>
+                <a href="/notifications" class="btn btn-light btn-sm">Notifications</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid my-4">
+        <!-- System Status Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body text-center">
+                        <h5><i class="bi bi-power"></i> System Status</h5>
+                        <h2 id="systemActive">🔴</h2>
+                        <small>Cycle: <span id="currentCycle">0</span></small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <h5><i class="bi bi-mortarboard"></i> Academic Agent</h5>
+                        <h2 id="academicSuccess">0%</h2>
+                        <small>Goals: <span id="academicGoals">0</span></small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body text-center">
+                        <h5><i class="bi bi-megaphone"></i> Grievance Agent</h5>
+                        <h2 id="grievanceSuccess">0%</h2>
+                        <small>Goals: <span id="grievanceGoals">0</span></small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body text-center">
+                        <h5><i class="bi bi-activity"></i> Total Actions</h5>
+                        <h2 id="totalActions">0</h2>
+                        <small>Last: <span id="lastUpdate">Never</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Analysis Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card risk-critical">
+                    <div class="card-body text-center">
+                        <h5>🚨 Critical Risk</h5>
+                        <h2 id="criticalRisk">0</h2>
+                        <small>Students</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card risk-high">
+                    <div class="card-body text-center">
+                        <h5>⚠️ High Risk</h5>
+                        <h2 id="highRisk">0</h2>
+                        <small>Students</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card risk-medium">
+                    <div class="card-body text-center">
+                        <h5>📊 Medium Risk</h5>
+                        <h2 id="mediumRisk">0</h2>
+                        <small>Students</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card risk-low">
+                    <div class="card-body text-center">
+                        <h5>✅ Low Risk</h5>
+                        <h2 id="lowRisk">0</h2>
+                        <small>Students</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictive Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5>📉 Dropout Risk</h5>
+                        <div class="progress mb-2" style="height: 25px;">
+                            <div id="dropoutProgress" class="progress-bar bg-danger" style="width: 0%">0%</div>
+                        </div>
+                        <small id="dropoutText">Calculating...</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5>🎯 Intervention Priority</h5>
+                        <h3 id="interventionPriority" class="text-warning">NORMAL</h3>
+                        <small>System-wide priority level</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5>❤️ System Health</h5>
+                        <div class="progress mb-2" style="height: 25px;">
+                            <div id="healthProgress" class="progress-bar bg-success" style="width: 0%">0%</div>
+                        </div>
+                        <small id="healthText">Calculating...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Detailed Views -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Agent Performance Trends</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="performanceChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-list-check"></i> Recent Agent Activities</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                        <div id="recentActivities">
+                            <p class="text-muted">Loading activities...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- High Risk Students Table -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> High & Critical Risk Students</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Risk Level</th>
+                                        <th>Risk Score</th>
+                                        <th>Predicted Grade</th>
+                                        <th>Recommended Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="highRiskStudents">
+                                    <tr><td colspan="5" class="text-muted">Loading high-risk students...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let performanceHistory = [];
+        let updateInterval;
+
+        async function updateAgentMonitor() {
+            try {
+                console.log("🔄 Updating agent monitor...");
+                
+                // Get system status
+                const statusResponse = await fetch('/api/agent-system/status');
+                const status = await statusResponse.json();
+                
+                // Get performance data
+                const perfResponse = await fetch('/api/agent-system/performance');
+                const performance = await perfResponse.json();
+                
+                // Get enhanced context for risk data
+                const contextResponse = await fetch('/api/enhanced-context');
+                const context = await contextResponse.json();
+
+                // Update system status
+                document.getElementById('systemActive').textContent = status.system_active ? '🟢 ACTIVE' : '🔴 INACTIVE';
+                document.getElementById('systemActive').className = status.system_active ? 'text-success' : 'text-danger';
+                document.getElementById('currentCycle').textContent = status.operation_cycles;
+                
+                // Update agent metrics
+                document.getElementById('academicSuccess').textContent = 
+                    Math.round((performance.academic?.success_rate || 0) * 100) + '%';
+                document.getElementById('grievanceSuccess').textContent = 
+                    Math.round((performance.grievance?.success_rate || 0) * 100) + '%';
+                document.getElementById('academicGoals').textContent = 
+                    status.agents?.academic?.goals?.length || 0;
+                document.getElementById('grievanceGoals').textContent = 
+                    status.agents?.grievance?.goals?.length || 0;
+                document.getElementById('totalActions').textContent = 
+                    (performance.academic?.plans_executed || 0) + (performance.grievance?.plans_executed || 0);
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+
+                // Update risk metrics
+                const academicContext = context.academic_context || {};
+                document.getElementById('criticalRisk').textContent = academicContext.critical_risk_count || 0;
+                document.getElementById('highRisk').textContent = academicContext.high_risk_count || 0;
+                document.getElementById('mediumRisk').textContent = academicContext.medium_risk_count || 0;
+                document.getElementById('lowRisk').textContent = 
+                    (academicContext.student_risk_analysis?.length || 0) - 
+                    ((academicContext.critical_risk_count || 0) + (academicContext.high_risk_count || 0) + (academicContext.medium_risk_count || 0));
+
+                // Update predictive metrics
+                const predictiveMetrics = academicContext.predictive_metrics || {};
+                const dropoutRisk = (predictiveMetrics.estimated_dropout_risk || 0) * 100;
+                const healthScore = (predictiveMetrics.system_health_score || 0) * 100;
+                
+                document.getElementById('dropoutProgress').style.width = dropoutRisk + '%';
+                document.getElementById('dropoutProgress').textContent = Math.round(dropoutRisk) + '%';
+                document.getElementById('dropoutText').textContent = dropoutRisk > 30 ? 'High Risk' : dropoutRisk > 15 ? 'Medium Risk' : 'Low Risk';
+                
+                document.getElementById('healthProgress').style.width = healthScore + '%';
+                document.getElementById('healthProgress').textContent = Math.round(healthScore) + '%';
+                document.getElementById('healthText').textContent = healthScore > 80 ? 'Excellent' : healthScore > 60 ? 'Good' : 'Needs Attention';
+                
+                document.getElementById('interventionPriority').textContent = predictiveMetrics.intervention_priority_level || 'NORMAL';
+                document.getElementById('interventionPriority').className = 
+                    predictiveMetrics.intervention_priority_level === 'CRITICAL' ? 'text-danger' :
+                    predictiveMetrics.intervention_priority_level === 'HIGH' ? 'text-warning' :
+                    predictiveMetrics.intervention_priority_level === 'MEDIUM' ? 'text-info' : 'text-success';
+
+                // Update high-risk students table
+                updateHighRiskStudents(academicContext.student_risk_analysis || []);
+
+                // Update performance chart
+                updatePerformanceChart(performance);
+
+                // Update recent activities
+                updateRecentActivities(context.recent_activities || []);
+
+            } catch (error) {
+                console.error('Error updating monitor:', error);
+                document.getElementById('recentActivities').innerHTML = 
+                    '<div class="alert alert-danger">Error loading data: ' + error.message + '</div>';
+            }
+        }
+
+        function updateHighRiskStudents(riskAnalysis) {
+            const highRiskStudents = riskAnalysis.filter(s => 
+                s.risk_level === 'CRITICAL' || s.risk_level === 'HIGH'
+            ).slice(0, 10); // Show top 10
+            
+            const tbody = document.getElementById('highRiskStudents');
+            
+            if (highRiskStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-muted">No high-risk students found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = highRiskStudents.map(student => `
+                <tr class="${student.risk_level === 'CRITICAL' ? 'table-danger' : 'table-warning'}">
+                    <td><strong>${student.student_id}</strong></td>
+                    <td>
+                        <span class="badge ${student.risk_level === 'CRITICAL' ? 'bg-danger' : 'bg-warning'}">
+                            ${student.risk_level}
+                        </span>
+                    </td>
+                    <td>${Math.round(student.risk_score * 100)}%</td>
+                    <td>${Math.round(student.predicted_final_grade || 0)}%</td>
+                    <td>
+                        <small>${(student.recommendations || []).slice(0, 2).join(', ')}</small>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updatePerformanceChart(performance) {
+            const now = new Date();
+            performanceHistory.push({
+                timestamp: now,
+                academic: performance.academic?.success_rate || 0,
+                grievance: performance.grievance?.success_rate || 0
+            });
+
+            // Keep only last 10 data points
+            if (performanceHistory.length > 10) {
+                performanceHistory = performanceHistory.slice(-10);
+            }
+
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            if (window.performanceChart) {
+                window.performanceChart.destroy();
+            }
+
+            window.performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: performanceHistory.map(p => p.timestamp.toLocaleTimeString()),
+                    datasets: [
+                        {
+                            label: 'Academic Agent Success',
+                            data: performanceHistory.map(p => p.academic * 100),
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Grievance Agent Success',
+                            data: performanceHistory.map(p => p.grievance * 100),
+                            borderColor: 'rgb(255, 159, 64)',
+                            backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Success Rate %'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRecentActivities(activities) {
+            const container = document.getElementById('recentActivities');
+            
+            if (!activities || activities.length === 0) {
+                container.innerHTML = '<p class="text-muted">No recent activities</p>';
+                return;
+            }
+            
+            container.innerHTML = activities.map(activity => `
+                <div class="border-bottom pb-2 mb-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${activity.agent}</strong>
+                            <div class="small">${activity.action}</div>
+                        </div>
+                        <span class="badge ${activity.success ? 'bg-success' : 'bg-warning'}">
+                            ${activity.success ? '✓' : '…'}
+                        </span>
+                    </div>
+                    <small class="text-muted">${new Date(activity.timestamp).toLocaleString()}</small>
+                </div>
+            `).join('');
+        }
+
+        // Start auto-update
+        function startAutoUpdate() {
+            updateAgentMonitor(); // Initial load
+            updateInterval = setInterval(updateAgentMonitor, 5000); // Update every 5 seconds
+        }
+
+        // Stop auto-update
+        function stopAutoUpdate() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', startAutoUpdate);
+        
+        // Cleanup when page unloads
+        window.addEventListener('beforeunload', stopAutoUpdate);
+    </script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Risk-Level Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(to right, #eef2ff, #f8fafc);
+      font-family: 'Poppins', sans-serif;
+    }
+    .navbar {
+      background: linear-gradient(45deg, #007bff, #6610f2);
+    }
+    .navbar-brand, .nav-link {
+      color: white !important;
+    }
+    .nav-link:hover {
+      color: #ffd700 !important;
+    }
+    .card {
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+    }
+    .risk-section { margin-bottom: 2rem; }
+    .risk-title {
+      font-weight: 600;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .risk-critical { background: #dc3545; }
+    .risk-high { background: #fd7e14; }
+    .risk-medium { background: #ffc107; color: #212529; }
+    .risk-low { background: #198754; }
+    .student-list button {
+      border: none;
+      background: none;
+      color: #007bff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .student-list button:hover { color: #0056b3; }
+    .table-sm td { padding: 0.3rem 0.5rem !important; }
+  </style>
+</head>
+
+<body>
+
+<!-- 🔹 Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand" href="/admin">
+      <i class="bi bi-activity me-2"></i> Risk Monitoring Dashboard
+    </a>
+    <div class="collapse navbar-collapse justify-content-end">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="/admin"><i class="bi bi-house-door"></i> Dashboard</a></li>
+        <li class="nav-item position-relative">
+          <a class="nav-link" href="/notifications">
+            <i class="bi bi-bell" style="font-size: 1.2rem;"></i>
+            <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style="display:none;">0</span>
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- 🔹 Main Content -->
+<div class="container py-4">
+  <h4 class="text-center fw-bold mb-4 text-primary">Student Risk Categories (Academic Agent)</h4>
+
+  {% for level, color, students in [
+    ('Critical', 'risk-critical', critical_students),
+    ('High', 'risk-high', high_students),
+    ('Medium', 'risk-medium', medium_students),
+    ('Low', 'risk-low', low_students)
+  ] %}
+  <div class="card risk-section">
+    <div class="risk-title {{ color }}">{{ level }} Risk Students</div>
+    <div class="card-body">
+      {% if students %}
+        <div class="student-list">
+          {% for s in students %}
+            <p>
+              <i class="bi bi-person-circle me-1"></i>
+              <button 
+                data-student="{{ s.student_id }}" 
+                data-suggestions="{{ s.recommendations | join('; ') }}"
+                data-risk="{{ s.risk_level }}"
+                data-score="{{ s.risk_score }}"
+                data-grade="{{ s.predicted_final_grade }}">
+                {{ s.student_id }}
+              </button>
+              <span class="text-muted small ms-2">(Score: {{ s.risk_score }}%)</span>
+            </p>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">✅ No {{ level.lower() }} risk students at this time.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 🔹 Popup Modal -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i>Student Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6 id="studentId" class="fw-bold text-primary mb-2"></h6>
+
+        <!-- Risk Info -->
+        <div class="alert alert-info py-2" id="riskInfo">
+          <strong>Risk Level:</strong> <span id="riskLevel">-</span> |
+          <strong>Risk Score:</strong> <span id="riskScore">-</span>% |
+          <strong>Predicted Final Grade:</strong> <span id="predictedGrade">-</span>
+        </div>
+
+        <!-- Academic Record Table -->
+        <h6 class="text-dark"><i class="bi bi-journal-check me-2"></i>Academic Record</h6>
+        <div class="table-responsive mb-3">
+          <table class="table table-sm table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>TA1</th><th>TA2</th><th>Final</th><th>Assignment</th><th>Attendance (TA1)</th><th>Attendance (Final)</th>
+              </tr>
+            </thead>
+            <tbody id="recordTable">
+              <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr>
+        <h6 class="text-success"><i class="bi bi-lightbulb"></i> Suggestions</h6>
+        <ul id="suggestionList"></ul>
+        <hr>
+        <h6 class="text-secondary"><i class="bi bi-chat-dots"></i> Send Message</h6>
+        <textarea id="messageInput" class="form-control mb-3" rows="3"
+                  placeholder="Type your message or modify suggestion..."></textarea>
+        <button id="sendMessageBtn" class="btn btn-primary w-100">
+          <i class="bi bi-send-fill me-2"></i>Send Message
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔹 Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = new bootstrap.Modal(document.getElementById('studentModal'));
+  const studentIdElem = document.getElementById('studentId');
+  const suggestionList = document.getElementById('suggestionList');
+  const messageInput = document.getElementById('messageInput');
+  const sendMessageBtn = document.getElementById('sendMessageBtn');
+  const recordTable = document.getElementById('recordTable');
+  const riskLevelElem = document.getElementById('riskLevel');
+  const riskScoreElem = document.getElementById('riskScore');
+  const predictedGradeElem = document.getElementById('predictedGrade');
+
+  // When clicking a student
+  document.querySelectorAll('.student-list button').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const studentId = btn.dataset.student;
+      const suggestions = btn.dataset.suggestions?.split('; ') || [];
+      const riskLevel = btn.dataset.risk || '-';
+      const riskScore = btn.dataset.score || '-';
+      const grade = btn.dataset.grade || '-';
+
+      // Update modal
+      studentIdElem.textContent = `Student ID: ${studentId}`;
+      riskLevelElem.textContent = riskLevel;
+      riskScoreElem.textContent = riskScore;
+      predictedGradeElem.textContent = grade;
+
+      // Suggestions
+      suggestionList.innerHTML = '';
+      suggestions.forEach(s => {
+        if (s.trim()) {
+          const li = document.createElement('li');
+          li.textContent = s;
+          li.addEventListener('click', () => messageInput.value = s);
+          suggestionList.appendChild(li);
+        }
+      });
+      if (!suggestions.length) suggestionList.innerHTML = "<li class='text-muted'>No suggestions available.</li>";
+
+      // Fetch student academic record
+      recordTable.innerHTML = "<tr><td colspan='6' class='text-center text-muted'>Loading...</td></tr>";
+      try {
+        const res = await fetch('/api/students');
+        const data = await res.json();
+        const record = data.students.find(s => s.student_id === studentId);
+        if (record) {
+          recordTable.innerHTML = `
+            <tr>
+              <td>${record.marks_ta1 || 0}%</td>
+              <td>${record.marks_ta2 || 0}%</td>
+              <td>${record.marks_final || 0}%</td>
+              <td>${record.assignment_marks || 0}%</td>
+              <td>${record.attendance_before_ta1 || 0}%</td>
+              <td>${record.attendance_before_final || 0}%</td>
+            </tr>`;
+        } else {
+          recordTable.innerHTML = "<tr><td colspan='6' class='text-center text-muted'>No record found.</td></tr>";
+        }
+      } catch (err) {
+        console.error('Record fetch error:', err);
+        recordTable.innerHTML = "<tr><td colspan='6' class='text-center text-danger'>Error loading record.</td></tr>";
+      }
+
+      messageInput.value = '';
+      sendMessageBtn.dataset.student = studentId;
+      modal.show();
+    });
+  });
+
+  // Send message to student
+  sendMessageBtn.addEventListener('click', async () => {
+    const studentId = sendMessageBtn.dataset.student;
+    const message = messageInput.value.trim();
+    if (!message) return alert('Please enter a message.');
+
+    const res = await fetch('/send_message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_id: studentId, message })
+    });
+    if (res.ok) {
+      alert('✅ Message sent successfully!');
+      modal.hide();
+    } else {
+      alert('⚠️ Failed to send message.');
+    }
+  });
+});
+</script>
+
+<script>
+async function updateNotificationBadge() {
+  try {
+    const res = await fetch('/unread_count');
+    const data = await res.json();
+    const badge = document.getElementById('notifBadge');
+    if (data.unread > 0) {
+      badge.style.display = 'inline-block';
+      badge.textContent = data.unread;
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (err) { console.error('Notification badge error:', err); }
+}
+updateNotificationBadge();
+setInterval(updateNotificationBadge, 30000);
+</script>
+
+</body>
+</html>

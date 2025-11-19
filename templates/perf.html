@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Performance Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+  <style>
+    body {
+      background: linear-gradient(to right, #e3f2fd, #f8f9fa);
+      font-family: "Poppins", sans-serif;
+    }
+    /* Navbar styling */
+    .navbar {
+      background: linear-gradient(45deg, #007bff, #6610f2);
+    }
+    .navbar-brand {
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .navbar-nav .nav-link {
+      color: white !important;
+      font-weight: 500;
+    }
+    .navbar-nav .nav-link:hover {
+      color: #ffd700 !important;
+    }
+
+    /* Card styling */
+    .card {
+      box-shadow: 0 0.15rem 1.75rem rgba(58,59,69,.15);
+      border: none;
+      border-radius: 1rem;
+    }
+    .card-header {
+      background: linear-gradient(45deg, #007bff, #6610f2);
+    }
+
+    /* Table and colors */
+    table tbody tr:hover {
+      background-color: #f1f3f5;
+      transition: 0.3s;
+    }
+    th {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .low-attendance {
+      color: #fd7e14 !important; /* orange */
+      font-weight: 600;
+    }
+    .zero-attendance {
+      color: #dc3545 !important; /* red */
+      font-weight: 700;
+    }
+    .low-marks {
+      color: #fd7e14 !important; /* orange */
+      font-weight: 600;
+    }
+    .zero-marks {
+      color: #dc3545 !important; /* red */
+      font-weight: 700;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- 🔹 NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center" href="/admin">
+      <i class="bi bi-lightning-charge-fill me-2"></i> Performance Dashboard
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="/admin"><i class="bi bi-house-door"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="/notifications"><i class="bi bi-bell"></i> Notifications</a></li>
+        <li class="nav-item"><a class="nav-link" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- 🔹 MAIN CONTENT -->
+<div class="container py-4">
+  <div class="card shadow-sm mb-4 border-0">
+    <div class="card-body d-flex justify-content-between align-items-center p-3 bg-light rounded">
+      <div>
+        <h6 class="fw-semibold mb-1 text-primary"><i class="bi bi-activity"></i> Academic Risk Analysis</h6>
+        <p class="text-muted small mb-0">
+          View categorized risk levels (Critical, High, Medium, Low) and send personalized guidance to students.
+        </p>
+      </div>
+      <a href="/risk_dashboard" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-right-circle me-1"></i> Go to Risk Dashboard
+      </a>
+    </div>
+  </div>
+  <div class="card mb-4">
+    <div class="card-header text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-bar-chart-line-fill"></i> Student Performance Dashboard</h5>
+      <select id="assessmentSelect" class="form-select form-select-sm w-auto border-0 shadow-sm">
+        <option value="ta1">TA1</option>
+        <option value="ta2">TA2</option>
+        <option value="final">Final</option>
+        <option value="assignment">Assignment</option>
+      </select>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0 align-middle" id="performanceTable">
+          <thead class="table-light">
+            <tr>
+              <th>Student</th>
+              <th>Attendance (%)</th>
+              <th>Marks (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+              <tr>
+                <td class="fw-semibold">{{ s.student_id }}</td>
+                <td class="text-center"
+                    data-ta1-att="{{ s.attendance_before_ta1 }}"
+                    data-ta2-att="{{ s.attendance_before_ta2 }}"
+                    data-final-att="{{ s.attendance_before_final }}"
+                    data-assignment-att="-">{{ s.attendance_before_ta1 }}</td>
+
+                <td class="text-center"
+                    data-ta1-marks="{{ s.marks_ta1 }}"
+                    data-ta2-marks="{{ s.marks_ta2 }}"
+                    data-final-marks="{{ s.marks_final }}"
+                    data-assignment-marks="{{ s.assignment_marks }}">{{ s.marks_ta1 }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card mt-4 shadow-sm">
+  <div class="card-header bg-success text-white">
+    <h6 class="mb-0"><i class="bi bi-lightbulb"></i>  Insights & Recommendations</h6>
+  </div>
+  <div class="card-body">
+    {% set show_anything = false %}
+    {% for s in students %}
+      {% if s.insights or s.recommendations %}
+        {% set show_anything = true %}
+        <div class="mb-4 border-bottom pb-2">
+          <h6 class="fw-bold text-primary mb-1">Student {{ s.student_id }}</h6>
+
+          <div class="row">
+            {% if s.insights %}
+              <div class="col-md-6">
+                <h6 class="text-success">Insights:</h6>
+                <ul>
+                  {% for msg in s.insights %}
+                    <li>{{ msg }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+            {% if s.recommendations %}
+              <div class="col-md-6">
+                <h6 class="text-warning">Recommended Actions:</h6>
+                <ul>
+                  {% for rec in s.recommendations %}
+                    <li>{{ rec }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    {% if not show_anything %}
+      <p class="text-muted text-center">✅ No insights or actions needed. All students performing within safe range.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+<!-- 🔹 SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+  let table = $('#performanceTable').DataTable({
+    "pageLength": 10,
+    "lengthChange": false,
+    "ordering": false,
+    "drawCallback": function() {
+      // Apply colors after table redraw
+      let val = $('#assessmentSelect').val();
+      applyColors(val);
+    }
+  });
+
+  // Function to apply colors for attendance and marks
+  function applyColors(val) {
+    $('#performanceTable tbody tr').each(function() {
+      // Attendance
+      let attTd = $(this).find('td').eq(1);
+      let att = attTd.text();
+      attTd.removeClass("low-attendance zero-attendance");
+      let attValue = parseFloat(att);
+      if (!isNaN(attValue)) {
+        if (attValue === 0) attTd.addClass("zero-attendance");
+        else if (attValue < 40) attTd.addClass("low-attendance");
+      }
+
+      // Marks
+      let marksTd = $(this).find('td').eq(2);
+      let marks = marksTd.text();
+      marksTd.removeClass("low-marks zero-marks");
+      let marksValue = parseFloat(marks);
+      if (!isNaN(marksValue)) {
+        if (marksValue === 0) marksTd.addClass("zero-marks");
+        else if (marksValue < 40) marksTd.addClass("low-marks");
+      }
+    });
+  }
+
+  // Function to update table values based on selected assessment
+  function updateTable(val) {
+    $('#performanceTable tbody tr').each(function() {
+      let attTd = $(this).find('td').eq(1);
+      let marksTd = $(this).find('td').eq(2);
+
+      let att = attTd.data(val + '-att');
+      let marks = marksTd.data(val + '-marks');
+
+      if (att === undefined) att = '-';
+      if (marks === undefined) marks = '-';
+
+      attTd.text(att);
+      marksTd.text(marks);
+    });
+
+    // Apply colors after updating values
+    applyColors(val);
+  }
+
+  // On assessment change
+  $('#assessmentSelect').on('change', function() {
+    let val = $(this).val();
+    updateTable(val);
+    table.draw();
+  });
+
+  // Initial load
+  updateTable('ta1');
+});
+</script>
+
+
+</body>
+</html>

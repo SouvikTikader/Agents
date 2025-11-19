@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Submit Grievance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body { background-color: #f5f7fb; font-family: 'Segoe UI', sans-serif; }
+    
+    /* Navbar */
+    .navbar { backdrop-filter: blur(10px); box-shadow: 0 0.2rem 1rem rgba(0,0,0,0.1); }
+    .navbar .btn { transition: transform 0.2s ease; }
+    .navbar .btn:hover { transform: scale(1.05); }
+
+    /* Cards */
+    .card { border-radius: 0.75rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 0.8rem 1.5rem rgba(0,0,0,0.1); }
+
+    /* Table */
+    table.table-striped>tbody>tr:hover { background-color: #e9f5ff; transition: background 0.2s; }
+    .badge-priority-high { background-color: #dc3545; color: white; }
+    .badge-priority-medium { background-color: #ffc107; color: black; }
+    .badge-priority-low { background-color: #198754; color: white; }
+
+    /* Past grievances table scroll */
+    .table-responsive { max-height: 400px; overflow-y: auto; }
+
+    /* Alerts */
+    .alert { border-radius: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg shadow-sm fixed-top" style="background: #0d6efd; border-bottom: 1px solid rgba(255,255,255,0.2);">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center text-white fw-bold" href="/" style="font-size: 1.25rem;">
+      <i class="bi bi-mortarboard-fill me-2"></i> Smart Academic System
+    </a>
+
+    <div class="d-flex align-items-center ms-auto gap-2">
+      <a href="/notifications" class="btn btn-light btn-sm rounded-circle border-0 shadow-sm me-2" 
+        style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+        <i class="bi bi-bell-fill text-primary"></i>
+      </a>
+
+      <div class="dropdown">
+        <button class="btn btn-light btn-sm rounded-circle border-0 shadow-sm" type="button" id="menuDropdown" data-bs-toggle="dropdown"
+                style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+          <i class="bi bi-list text-primary fs-5"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3" aria-labelledby="menuDropdown">
+          <li class="dropdown-header fw-semibold text-muted small px-3"><i class="bi bi-person-circle me-1"></i> {{ username }}</li>
+          <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-house me-2 text-primary"></i>Dashboard</a></li>
+          <li><a class="dropdown-item" href="/predict_risk_page"><i class="bi bi-graph-up me-2 text-success"></i>Predict Risk</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger fw-semibold" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div style="height: 70px;"></div>
+
+<!-- MAIN CONTENT -->
+<div class="container my-5">
+
+  <!-- Submission Card -->
+  <div class="card shadow-sm p-4 border-0 mx-auto" style="max-width: 600px;">
+    <h4 class="mb-3 text-center text-primary"><i class="bi bi-exclamation-diamond"></i> Submit Grievance</h4>
+    <p class="text-center text-muted mb-4">Describe your issue or query below. Our team will review and get back to you.</p>
+    
+    <form action="/submit_grievance" method="POST">
+      <div class="mb-3">
+        <label class="form-label">Your Message</label>
+        <textarea name="message" class="form-control" rows="4" placeholder="Describe your issue..." required></textarea>
+      </div>
+      <button class="btn btn-warning w-100">Submit</button>
+    </form>
+
+    {% if status %}
+      <div class="alert alert-success mt-3 text-center">{{ status }}</div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+      <a href="/dashboard" class="btn btn-outline-primary"><i class="bi bi-house me-2"></i>Back to Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Past Grievances -->
+  <div class="card shadow-sm p-3 border-0 mt-4">
+    <div class="card-header bg-primary text-white">
+      <i class="bi bi-clock-history me-2"></i>Past Grievances / Queries
+    </div>
+    <div class="card-body p-0 table-responsive">
+      <table class="table table-striped mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Message</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Submitted On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in past_grievances %}
+            <tr>
+              <td>{{ g['id'] }}</td>
+              <td>{{ g['message'] }}</td>
+              <td>{{ g['category'] }}</td>
+              <td>
+                {% if g['priority'] == 'High' %}
+                  <span class="badge badge-priority-high">{{ g['priority'] }}</span>
+                {% elif g['priority'] == 'Medium' %}
+                  <span class="badge badge-priority-medium">{{ g['priority'] }}</span>
+                {% else %}
+                  <span class="badge badge-priority-low">{{ g['priority'] }}</span>
+                {% endif %}
+              </td>
+              <td>{{ g['status'] }}</td>
+              <td>{{ g['timestamp'] }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-3">No past grievances found</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

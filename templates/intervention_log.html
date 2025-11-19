@@ -1,0 +1,41 @@
+<!-- templates/intervention_log.html -->
+<div class="card">
+  <div class="card-header bg-primary text-white">
+    <h5><i class="bi bi-activity"></i> Agent Intervention Log</h5>
+  </div>
+  <div class="card-body">
+    <table class="table" id="interventionTable">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Agent</th>
+          <th>Student</th>
+          <th>Intervention</th>
+          <th>Outcome</th>
+        </tr>
+      </thead>
+      <tbody id="interventionBody">
+        <!-- Will be populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadInterventions() {
+  const response = await fetch('/api/agent-interventions');
+  const interventions = await response.json();
+  
+  document.getElementById('interventionBody').innerHTML = interventions.map(i => `
+    <tr>
+      <td>${new Date(i.timestamp).toLocaleString()}</td>
+      <td><span class="badge bg-info">${i.agent}</span></td>
+      <td>${i.student_id}</td>
+      <td>${i.intervention_type}</td>
+      <td><span class="badge ${i.success ? 'bg-success' : 'bg-warning'}">
+        ${i.success ? 'Successful' : 'Needs Review'}
+      </span></td>
+    </tr>
+  `).join('');
+}
+</script>
