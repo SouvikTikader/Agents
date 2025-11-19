@@ -26,7 +26,7 @@ ADMIN_EMAILS = os.getenv('ADMIN_EMAILS', 'souviktikader077@gmail.com').split(','
 SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'souviktikader077@gmail.com')
 SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', 'ypkw gomz xijp wkcx')
 
-# Keep all your existing constants
+
 DB_PATH = Path(__file__).parent / "database" / "system.db"
 MODEL_PATH = Path(__file__).parent / "models" / "risk_model.pkl"
 
@@ -212,7 +212,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ========== KEEP ALL YOUR EXISTING HELPER FUNCTIONS ==========
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH, timeout=30)
@@ -221,8 +220,6 @@ def get_db_connection():
     return conn
 
 
-# [file name]: main.py
-# Add these enhanced notification functions
 
 def add_notification(message: str, user_id: str = None, notification_type: str = "system", 
                    priority: str = "normal", agent_source: str = None, metadata: dict = None):
@@ -393,7 +390,6 @@ def extract_email_subject(self, message: str) -> str:
     else:
         return "System Notification"
 
-# Add new API endpoints for testing email
 @app.get("/test-email")
 async def test_email():
     """Test email notification system"""
@@ -499,7 +495,7 @@ def escalate_grievance_priority(grievance_id, student_id, category):
 
         duplicate_ids = [d["id"] for d in duplicates]
 
-        # --- Case 1: Merge if 3 or more identical grievances ---
+    
         if len(duplicate_ids) + 1 >= 3:
             # Keep the newest one
             all_ids = duplicate_ids + [grievance_id]
@@ -528,7 +524,6 @@ def escalate_grievance_priority(grievance_id, student_id, category):
                 agent_source="System"
             )
 
-        # --- Case 2: Auto-resolve duplicates when main grievance is resolved ---
         if current_status.lower() == "resolved":
             resolved_duplicates = conn.execute(
                 """
@@ -554,7 +549,6 @@ def escalate_grievance_priority(grievance_id, student_id, category):
                     agent_source="System"
                 )
 
-# ========== SESSION MANAGEMENT ==========
 
 def get_session(request: Request):
     session_id = request.cookies.get("session_id")
@@ -572,7 +566,7 @@ def require_admin(request: Request):
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     return session_data
 
-# ========== AUTHENTICATION ROUTES ==========
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -652,7 +646,6 @@ async def logout():
     response.delete_cookie("session_id")
     return response
 
-# ========== STUDENT DASHBOARD ROUTES ==========
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -753,7 +746,7 @@ async def submit_grievance(
         agent_source="System"
     )
     
-    # Also notify admins about new grievance
+    # notify admins about new grievance
     add_notification(
         message=f"New grievance from {student_id}: {message[:50]}...",
         user_id=None,  # Global notification for admins
@@ -762,8 +755,6 @@ async def submit_grievance(
         agent_source="System"
     )
     return RedirectResponse(url="/griev?message=Grievance+submitted+successfully", status_code=303)
-
-# ========== RISK PREDICTION ROUTES ==========
 
 
 async def predict_risk_page(request: Request):
@@ -836,7 +827,6 @@ async def predict_risk(
         }
     )
 
-# ========== ADMIN ROUTES ==========
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(request: Request):
@@ -1453,3 +1443,4 @@ if __name__ == "__main__":
         log_level="info"
 
     )
+
