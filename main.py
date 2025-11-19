@@ -1,4 +1,4 @@
-# main.py - COMPLETE CONVERSION
+# main.py 
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, WebSocket
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -30,7 +30,7 @@ SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', 'ypkw gomz xijp wkcx')
 DB_PATH = Path(__file__).parent / "database" / "system.db"
 MODEL_PATH = Path(__file__).parent / "models" / "risk_model.pkl"
 
-# Session storage (replaces Flask sessions)
+# Session storage 
 sessions = {}
 CATEGORY_KEYWORDS = {
     'academic': ['exam', 'marks', 'grade', 'grades', 'ta1', 'ta2', 'final', 'assignment', 'gpa', 'syllabus'],
@@ -1451,4 +1451,5 @@ if __name__ == "__main__":
         port=8000,
         reload=True,
         log_level="info"
+
     )
