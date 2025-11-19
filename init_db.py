@@ -1,5 +1,4 @@
-# [file name]: init_db.py
-# [file content begin]
+
 import sqlite3
 import os
 
@@ -10,9 +9,6 @@ os.makedirs("database", exist_ok=True)
 conn = sqlite3.connect("database/system.db")
 conn.execute("PRAGMA foreign_keys = ON;")  # Enable FK constraints
 
-# ---------------------------
-# USERS TABLE
-# ---------------------------
 conn.execute('''CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -21,7 +17,7 @@ conn.execute('''CREATE TABLE IF NOT EXISTS users (
     role TEXT CHECK(role IN ('student', 'admin')) DEFAULT 'student'
 )''')
 
-# Create academic_analysis table
+
 conn.execute("""
 CREATE TABLE IF NOT EXISTS academic_analysis (
     student_id TEXT PRIMARY KEY,
@@ -31,9 +27,7 @@ CREATE TABLE IF NOT EXISTS academic_analysis (
 )
 """)
 
-# ---------------------------
-# STUDENT PERFORMANCE TABLE
-# ---------------------------
+
 conn.execute('''CREATE TABLE IF NOT EXISTS performance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT NOT NULL,
@@ -47,12 +41,10 @@ conn.execute('''CREATE TABLE IF NOT EXISTS performance (
     FOREIGN KEY (student_id) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
 )''')
 
-# Index on student_id for fast queries
+
 conn.execute('CREATE INDEX IF NOT EXISTS idx_performance_student ON performance(student_id)')
 
-# ---------------------------
-# GRIEVANCES TABLE
-# ---------------------------
+
 conn.execute('''CREATE TABLE IF NOT EXISTS grievances (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT NOT NULL,
@@ -64,12 +56,10 @@ conn.execute('''CREATE TABLE IF NOT EXISTS grievances (
     FOREIGN KEY (student_id) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
 )''')
 
-# Index on student_id for grievances
+
 conn.execute('CREATE INDEX IF NOT EXISTS idx_grievances_student ON grievances(student_id)')
 
-# ---------------------------
-# NOTIFICATIONS TABLE (UPDATED)
-# ---------------------------
+
 conn.execute('''CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT,  -- NULL means global notification
@@ -83,13 +73,8 @@ conn.execute('''CREATE TABLE IF NOT EXISTS notifications (
     FOREIGN KEY (user_id) REFERENCES users(username) ON DELETE CASCADE
 )''')
 
-# Index on user_id for notifications
 conn.execute('CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)')
-conn.execute('CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(notification_type)')
 
-# ---------------------------
-# AGENT MEMORY TABLE (ENHANCED)
-# ---------------------------
 conn.execute('''CREATE TABLE IF NOT EXISTS agent_memory (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     agent_name TEXT NOT NULL,
@@ -104,9 +89,7 @@ conn.execute('''CREATE TABLE IF NOT EXISTS agent_memory (
     metadata TEXT
 )''')
 
-# ---------------------------
-# AGENT ACTIONS LOG (ENHANCED)
-# ---------------------------
+
 conn.execute('''CREATE TABLE IF NOT EXISTS agent_actions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     agent_name TEXT NOT NULL,
@@ -123,9 +106,7 @@ conn.execute('''CREATE TABLE IF NOT EXISTS agent_actions (
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 )''')
 
-# ---------------------------
-# INTERVENTION PLANS
-# ---------------------------
+
 conn.execute('''CREATE TABLE IF NOT EXISTS intervention_plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT NOT NULL,
@@ -140,4 +121,4 @@ conn.execute('''CREATE TABLE IF NOT EXISTS intervention_plans (
 conn.commit()
 conn.close()
 
-print("✅ Database initialized successfully at 'database/system.db' with enhanced schema.")
+print("Database initialized successfully at 'database/system.db' with enhanced schema.")
