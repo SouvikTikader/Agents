@@ -92,7 +92,7 @@ class GrievanceAgent(BaseAgent):
         actions_taken = []
         grievance_context = context.get('grievance_context', {})
         
-        # Use agent's notification method instead of direct import
+    
         pending_count = len(grievance_context.get('pending_grievances', []))
         if pending_count > 0:
             await self.send_agent_notification(
@@ -323,4 +323,5 @@ class GrievanceAgent(BaseAgent):
         successful_steps = sum(1 for r in plan_results 
                              if r.get('status') == 'completed' and 
                              not r.get('result', {}).get('error'))
+
         return successful_steps / len(plan_results)
