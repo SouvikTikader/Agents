@@ -19,7 +19,7 @@ class AgentOrchestrator:
         self.active = False
         self.operation_cycles = 0
         
-    # Update the main loop to include communication
+
     async def start_autonomous_operation(self):
         """Start agents running autonomously in continuous cycles"""
         self.active = True
@@ -34,7 +34,7 @@ class AgentOrchestrator:
                 # Gather current system state
                 context = await self.gather_system_context()
                 
-                # FACILITATE AGENT COMMUNICATION (NEW)
+        
                 await self.facilitate_agent_communication(context)
                 
                 # Let each agent pursue their goals autonomously
@@ -87,7 +87,7 @@ class AgentOrchestrator:
                 FROM performance
             ''').fetchall()
 
-            # NEW: Get individual student risk analysis
+            # Get individual student risk analysis
             student_risk_analysis = []
             academic_agent = self.agents['academic']
             
@@ -95,7 +95,7 @@ class AgentOrchestrator:
                 student_dict = dict(student)
                 risk_analysis = await academic_agent.calculate_student_risk_score(student_dict)
 
-                # 🔹 Ensure valid dictionary before unpacking
+                #Ensure valid dictionary before unpacking
                 if isinstance(risk_analysis, dict):
                     student_risk_analysis.append({
                         "student_id": student_dict['student_id'],
@@ -174,9 +174,7 @@ class AgentOrchestrator:
             
         except Exception as e:
             print(f"Database context gathering error: {e}")
-            return self.get_fallback_context()
-
-    # NEW: Add these predictive methods to your orchestrator class
+            return 
     async def calculate_dropout_risk(self, risk_analysis: List[Dict]) -> float:
         """Calculate overall system dropout risk"""
         if not risk_analysis:
@@ -212,7 +210,7 @@ class AgentOrchestrator:
         if not risk_analysis:
             return 0.0
         
-        # Base health (inverse of risk)
+        
         critical_ratio = len([s for s in risk_analysis if s['risk_level'] == 'CRITICAL']) / len(risk_analysis)
         high_ratio = len([s for s in risk_analysis if s['risk_level'] == 'HIGH']) / len(risk_analysis)
         
@@ -223,14 +221,13 @@ class AgentOrchestrator:
             health_score *= 0.8
         
         return max(0.0, min(1.0, health_score))
-
-    # Update the count_at_risk_students method to be more detailed
+        
     async def count_at_risk_students(self) -> int:
         """Count actual at-risk students from database with better criteria"""
         try:
             conn = sqlite3.connect(self.db_path)
             
-            # More comprehensive risk criteria
+            
             count = conn.execute('''
                 SELECT COUNT(*) FROM performance 
                 WHERE (marks_ta1 < 40 OR marks_ta2 < 40 OR marks_final < 40 OR 
@@ -246,7 +243,7 @@ class AgentOrchestrator:
             print(f"Error counting at-risk students: {e}")
             return 0
 
-    # Add this helper method
+    #  helper method
     
     async def calculate_risk_level(self, performance_data, grievance_data) -> str:
         """Calculate overall system risk level"""
@@ -289,8 +286,7 @@ class AgentOrchestrator:
             return "stable"
     async def process_agent_results(self, agent_results: List[Dict]):
         """Process agent results and trigger notifications"""
-        from main import add_notification  # Import here to avoid circular imports
-        
+        from main import add_notification          
         for result in agent_results:
             agent_name = result.get('agent', 'Unknown')
             actions = result.get('actions_taken', [])
@@ -309,7 +305,7 @@ class AgentOrchestrator:
     
     async def count_low_performers(self, performance_data) -> int:
         """Estimate number of low performers"""
-        # This is a simplified estimation
+       
         if not performance_data or not performance_data['total_students']:
             return 0
         return max(1, int(performance_data['total_students'] * 0.2))  # Estimate 20%
@@ -436,7 +432,7 @@ class AgentOrchestrator:
         high_risk_with_issues = set(at_risk_students) & set(students_with_grievances)
         
         if high_risk_with_issues:
-            # UPDATED: Use enhanced notification system
+            
             from main import add_notification
             message = f"🚨 AGENT COLLABORATION: {len(high_risk_with_issues)} high-risk students also have pending grievances"
             
@@ -528,7 +524,7 @@ class AgentOrchestrator:
             'URGENT': 0.8, 'HIGH': 0.6, 'MEDIUM': 0.3, 'LOW': 0.1
         }.get(grievance_insights.get('urgency_level', 'LOW'), 0.1)
         
-        # Weight academic risk slightly higher
+        # Weight academic risk
         return (academic_risk * 0.6 + grievance_risk * 0.4)
 
     async def count_low_performers(self, performance_data) -> int:
@@ -559,4 +555,5 @@ class AgentOrchestrator:
                 }
             }
         
+
         return status
