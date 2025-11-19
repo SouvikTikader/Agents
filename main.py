@@ -16,21 +16,19 @@ from contextlib import asynccontextmanager
 import uuid
 import os
 from agents.orchestrator import AgentOrchestrator
-# Add to imports
 from dotenv import load_dotenv
 
-# Load environment variables
+
 load_dotenv()
 
 ADMIN_EMAILS = os.getenv('ADMIN_EMAILS', 'souviktikader077@gmail.com').split(',')
 SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'souviktikader077@gmail.com')
-SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', 'ypkw gomz xijp wkcx')
+SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', '')
 
 
 DB_PATH = Path(__file__).parent / "database" / "system.db"
-MODEL_PATH = Path(__file__).parent / "models" / "risk_model.pkl"
 
-# Session storage 
+
 sessions = {}
 CATEGORY_KEYWORDS = {
     'academic': ['exam', 'marks', 'grade', 'grades', 'ta1', 'ta2', 'final', 'assignment', 'gpa', 'syllabus'],
@@ -46,7 +44,7 @@ async def run_academic_analysis_once():
     students = conn.execute("SELECT * FROM performance").fetchall()
     conn.close()
 
-    print(f"🎓 Analyzing {len(students)} students for academic risk...")
+    print(f"Analyzing {len(students)} students for academic risk...")
 
     for s in students:
         student_data = dict(s)
@@ -59,11 +57,11 @@ def academic_analysis_loop(interval=300):
     async def run_agent():
         while True:
             try:
-                print(f"\n📘 [AcademicAgent Loop] Running academic risk analysis at {datetime.now().strftime('%H:%M:%S')}")
+                print(f"\n[AcademicAgent Loop] Running academic risk analysis at {datetime.now().strftime('%H:%M:%S')}")
                 await run_academic_analysis_once()
-                print("✅ Academic risk analysis completed.\n")
+                print("Academic risk analysis completed.\n")
             except Exception as e:
-                print(f"⚠️ AcademicAgent loop error: {e}")
+                print(f"AcademicAgent loop error: {e}")
             await asyncio.sleep(interval)  # Run every 5 minutes
 
     asyncio.run(run_agent())
@@ -144,7 +142,7 @@ def grievance_agent_loop(interval=1200):
                     category = g['category']
                     message = g['message']
 
-                    # 🔁 Check for duplicates of same message/category/student
+                    # Check for duplicates of same message/category/student
                     duplicates = conn.execute(
                         """
                         SELECT COUNT(*) AS count FROM grievances
@@ -154,11 +152,11 @@ def grievance_agent_loop(interval=1200):
                         (student_id, category, message)
                     ).fetchone()
 
-                    # 🚨 If same grievance submitted 3 or more times — escalate & merge
+                    #  If same grievance submitted 3 or more times escalate & merge
                     if duplicates and duplicates['count'] >= 3:
                         escalate_grievance_priority(grievance_id, student_id, category)
 
-                    # 🚨 Notify admins if high priority
+                    #  Notify admins if high priority
                     if g['priority'].lower() == "high":
                         existing = conn.execute(
                             "SELECT * FROM notifications WHERE message LIKE ?",
@@ -166,7 +164,7 @@ def grievance_agent_loop(interval=1200):
                         ).fetchone()
                         if not existing:
                             add_notification(
-                                message=f"🚨 Urgent Grievance #{g['id']} from {g['student_id']} requires immediate attention",
+                                message=f" Urgent Grievance #{g['id']} from {g['student_id']} requires immediate attention",
                                 user_id=None,
                                 notification_type="grievance_urgent",
                                 priority="high",
@@ -184,10 +182,9 @@ def grievance_agent_loop(interval=1200):
 # FastAPI app with lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start your existing background threads
+
     threading.Thread(target=risk_agent_loop, daemon=True).start()
     threading.Thread(target=grievance_agent_loop, daemon=True).start()
-    # Start Academic Agent background thread
     threading.Thread(target=academic_analysis_loop, daemon=True).start()
 
     
@@ -227,7 +224,7 @@ def add_notification(message: str, user_id: str = None, notification_type: str =
     try:
         conn = get_db_connection()
         
-        # Convert metadata to JSON string if provided
+        
         metadata_json = None
         if metadata:
             import json
@@ -272,11 +269,11 @@ def log_agent_action(agent_name: str, action_type: str, details: str, student_id
         conn.commit()
         conn.close()
         
-        print(f"🤖 AGENT ACTION: {agent_name} -> {action_type} for {student_id or 'system'}")
+        print(f" AGENT ACTION: {agent_name} -> {action_type} for {student_id or 'system'}")
         return True
         
     except Exception as e:
-        print(f"❌ AGENT ACTION LOG ERROR: {e}")
+        print(f"AGENT ACTION LOG ERROR: {e}")
         return False
 
 def store_agent_memory(agent_name: str, memory_type: str, content: str, student_id: str = None,
@@ -299,11 +296,11 @@ def store_agent_memory(agent_name: str, memory_type: str, content: str, student_
         conn.commit()
         conn.close()
         
-        print(f"🧠 AGENT MEMORY: {agent_name} stored {memory_type} for {student_id or 'general'}")
+        print(f"AGENT MEMORY: {agent_name} stored {memory_type} for {student_id or 'general'}")
         return True
         
     except Exception as e:
-        print(f"❌ AGENT MEMORY STORAGE ERROR: {e}")
+        print(f"AGENT MEMORY STORAGE ERROR: {e}")
         return False
 
 def get_agent_memories(agent_name: str, memory_type: str = None, student_id: str = None, limit: int = 10):
@@ -331,7 +328,7 @@ def get_agent_memories(agent_name: str, memory_type: str = None, student_id: str
         return [dict(memory) for memory in memories]
         
     except Exception as e:
-        print(f"❌ AGENT MEMORY RETRIEVAL ERROR: {e}")
+        print(f"AGENT MEMORY RETRIEVAL ERROR: {e}")
         return []
 
 def get_suggestions_from_memory(agent_name: str, student_id: str = None):
@@ -352,28 +349,28 @@ def get_suggestions_from_memory(agent_name: str, student_id: str = None):
         # Generate suggestions based on patterns
         if success_patterns:
             recent_success = success_patterns[0]
-            suggestions.append(f"✅ Repeat successful strategy: {recent_success['content'][:100]}...")
+            suggestions.append(f" Repeat successful strategy: {recent_success['content'][:100]}...")
         
         if failure_patterns:
             recent_failure = failure_patterns[0]
-            suggestions.append(f"⚠️ Avoid previous failure: {recent_failure['content'][:100]}...")
+            suggestions.append(f" Avoid previous failure: {recent_failure['content'][:100]}...")
         
         if interventions:
             successful_interventions = [i for i in interventions if i.get('confidence_score', 0) > 0.7]
             if successful_interventions:
-                suggestions.append(f"🎯 Consider proven intervention: {successful_interventions[0]['content'][:100]}...")
+                suggestions.append(f"Consider proven intervention: {successful_interventions[0]['content'][:100]}...")
         
-        # Add general suggestions based on memory count
+
         if len(memories) > 10:
-            suggestions.append("📊 You have substantial historical data - trust your learned patterns")
+            suggestions.append("You have substantial historical data - trust your learned patterns")
         
         if not suggestions:
-            suggestions.append("🔍 Continue monitoring and gathering data for better suggestions")
+            suggestions.append("Continue monitoring and gathering data for better suggestions")
         
         return suggestions
         
     except Exception as e:
-        print(f"❌ SUGGESTION GENERATION ERROR: {e}")
+        print(f"SUGGESTION GENERATION ERROR: {e}")
         return ["Error generating suggestions from memory."]
     
     
@@ -393,7 +390,7 @@ def extract_email_subject(self, message: str) -> str:
 @app.get("/test-email")
 async def test_email():
     """Test email notification system"""
-    test_message = "🤖 TEST: This is a test of the autonomous agent email notification system."
+    test_message = " TEST: This is a test of the autonomous agent email notification system."
     
     success = add_notification(
         test_message, 
@@ -411,7 +408,7 @@ async def test_email():
 @app.get("/test-critical-email")
 async def test_critical_email():
     """Test critical email notification"""
-    test_message = "🚨 CRITICAL TEST: This is a test of critical email alerts. Immediate action may be required."
+    test_message = "CRITICAL TEST: This is a test of critical email alerts. Immediate action may be required."
     
     success = add_notification(
         test_message,
@@ -497,8 +494,7 @@ def escalate_grievance_priority(grievance_id, student_id, category):
 
     
         if len(duplicate_ids) + 1 >= 3:
-            # Keep the newest one
-            all_ids = duplicate_ids + [grievance_id]
+            # Keep the new            all_ids = duplicate_ids + [grievance_id]
             main_id = max(all_ids)
             old_ids = [str(i) for i in all_ids if i != main_id]
 
@@ -514,7 +510,7 @@ def escalate_grievance_priority(grievance_id, student_id, category):
             )
             conn.commit()
 
-            print(f"⚠️ Auto-merge: Student {student_id} had {len(all_ids)} identical grievances → merged into #{main_id} (HIGH priority)")
+            print(f" Auto-merge: Student {student_id} had {len(all_ids)} identical grievances → merged into #{main_id} (HIGH priority)")
 
             add_notification(
                 message=f"Grievances merged: Student {student_id} submitted same issue {len(all_ids)} times → merged into one HIGH priority grievance (#{main_id})",
@@ -539,10 +535,10 @@ def escalate_grievance_priority(grievance_id, student_id, category):
                 conn.execute(f"UPDATE grievances SET status='Resolved' WHERE id IN ({placeholders})", ids_to_close)
                 conn.commit()
 
-                print(f"✅ Auto-resolved {len(ids_to_close)} duplicate grievances for {student_id} ({category})")
+                print(f"Auto-resolved {len(ids_to_close)} duplicate grievances for {student_id} ({category})")
 
                 add_notification(
-                    message=f"✅ Auto-resolved {len(ids_to_close)} duplicate grievances for {student_id} after main grievance resolution.",
+                    message=f" Auto-resolved {len(ids_to_close)} duplicate grievances for {student_id} after main grievance resolution.",
                     user_id=None,
                     notification_type="grievance_auto_resolve",
                     priority="normal",
@@ -737,7 +733,7 @@ async def submit_grievance(
     conn.commit()
     conn.close()
 
-    # UPDATED: Add targeted notification
+    # targeted notification
     add_notification(
         message=f"New grievance submitted by {student_id} ({Category}) - Priority: {urgency}",
         user_id=student_id,  # Notify the student
@@ -765,7 +761,6 @@ async def predict_risk_page(request: Request):
         'request': request,
         'username': username  # Add this line
     })
-# Add this missing route in main.py
 @app.get("/predict_risk_page", response_class=HTMLResponse)
 async def predict_risk_page(request: Request):
     session_data = require_login(request)
@@ -843,12 +838,12 @@ async def admin_dashboard(request: Request):
     pending_grievances = conn.execute("SELECT COUNT(*) FROM grievances WHERE status='Pending'").fetchone()[0]
     resolved_grievances = conn.execute("SELECT COUNT(*) FROM grievances WHERE status='Resolved'").fetchone()[0]
 
-    # Count from academic_analysis table (used by risk dashboard)
+    # Count from academic_analysis table
     at_risk_count = conn.execute("SELECT COUNT(*) FROM academic_analysis WHERE risk_level IN ('HIGH', 'CRITICAL')").fetchone()[0]
 
     conn.close()
 
-    # Pass all counts to template
+    
     return templates.TemplateResponse(
         'admin.html',
         {
@@ -911,7 +906,7 @@ async def update_status(id: int, status: str, request: Request):
     conn.close()
 
     add_notification(
-        message=f"✅ Grievance #{id} marked as {status}",
+        message=f" Grievance #{id} marked as {status}",
         user_id=None,  # Global for all admins
         notification_type="grievance_update",
         priority="normal",
@@ -1034,7 +1029,7 @@ async def add_marks(
         'students': [dict(s) for s in students]
     })
 
-# ========== PERFORMANCE & NOTIFICATION ROUTES ==========
+
 
 @app.get("/perf", response_class=HTMLResponse)
 async def performance_dashboard(request: Request):
@@ -1172,7 +1167,7 @@ async def notifications_page(request: Request):
             "SELECT * FROM notifications WHERE user_id = ? ORDER BY timestamp DESC",
             (username,)
         ).fetchall()
-        # ✅ Mark student's notifications as read
+        #  Mark student's notifications as read
         conn.execute(
             "UPDATE notifications SET seen = 1 WHERE user_id = ? AND seen = 0",
             (username,)
@@ -1191,7 +1186,7 @@ async def notifications_page(request: Request):
         },
     )
 
-# Add agent monitoring endpoints
+#  agent monitoring endpoints
 @app.get("/api/agent-system/status")
 async def get_agent_system_status():
     return await agent_orchestrator.get_agent_status()
@@ -1287,7 +1282,7 @@ async def api_grievances(request: Request):
     return {"grievances": [dict(g) for g in grievances]}
 
 
-# Add these endpoints
+
 @app.get("/agent-dashboard", response_class=HTMLResponse)
 async def agent_dashboard(request: Request):
     require_admin(request)
@@ -1317,8 +1312,7 @@ async def get_ai_predictions(request: Request):
     # Use academic agent to generate predictions
     predictions = await agent_orchestrator.agents['academic'].generate_predictions(data)
 
-# [file name]: main.py
-# Add these endpoints to main.py
+
 
 @app.get("/api/agent/memories/{agent_name}")
 async def get_agent_memories_api(agent_name: str, request: Request):
@@ -1369,7 +1363,7 @@ async def send_message(request: Request):
     conn.commit()
     conn.close()
 
-    print(f"📨 Personal message sent to {student_id}: {message}")
+    print(f"Personal message sent to {student_id}: {message}")
     return {"status": "success"}
 
 @app.get("/unread_count")
@@ -1404,7 +1398,7 @@ async def risk_dashboard(request: Request):
 
     students = []
     for row in students_raw:
-        s = dict(row)  # ✅ Convert sqlite3.Row → dict so we can modify it
+        s = dict(row)  # Convert sqlite3.Row → dict so we can modify it
         try:
             recs = json.loads(s.get("recommendations", "[]"))
             if isinstance(recs, str):
@@ -1414,13 +1408,13 @@ async def risk_dashboard(request: Request):
             s["recommendations"] = [s.get("recommendations", "No recommendations")]
         students.append(s)
 
-    # ✅ Categorize by risk level
+    # Categorize by risk level
     critical_students = [s for s in students if s["risk_level"] == "CRITICAL"]
     high_students = [s for s in students if s["risk_level"] == "HIGH"]
     medium_students = [s for s in students if s["risk_level"] == "MEDIUM"]
     low_students = [s for s in students if s["risk_level"] == "LOW"]
 
-    # ✅ Render the template
+    #  Render the template
     return templates.TemplateResponse(
         "risk_dashboard.html",
         {
@@ -1431,7 +1425,7 @@ async def risk_dashboard(request: Request):
             "low_students": low_students,
         },
     )
-# ========== RUN APPLICATION ==========
+
 
 if __name__ == "__main__":
     import uvicorn
@@ -1443,4 +1437,5 @@ if __name__ == "__main__":
         log_level="info"
 
     )
+
 
