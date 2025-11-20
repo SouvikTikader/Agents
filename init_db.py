@@ -2,12 +2,11 @@
 import sqlite3
 import os
 
-# Ensure database directory exists
 os.makedirs("database", exist_ok=True)
 
-# Connect to SQLite DB with foreign keys enabled
+
 conn = sqlite3.connect("database/system.db")
-conn.execute("PRAGMA foreign_keys = ON;")  # Enable FK constraints
+conn.execute("PRAGMA foreign_keys = ON;") 
 
 conn.execute('''CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
